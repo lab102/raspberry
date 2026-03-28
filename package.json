@@ -1,0 +1,13 @@
+{
+  "name": "proj-raspberry",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "ui"
+  ],
+  "scripts": {
+    "dev:ui": "npm --workspace ui run dev",
+    "build:ui": "npm --workspace ui run build",
+    "start:firmware": "python firmware/src/main.py"
+  }
+}
