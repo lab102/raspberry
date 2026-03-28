@@ -336,3 +336,12 @@ body::before {
     border-radius: 20px;
   }
 }
+
+.secondary-grid {
+  margin-top: 16px;
+}
+
+select.numeric-input {
+  appearance: none;
+}
+
