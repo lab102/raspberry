@@ -1,1 +1,1 @@
-# Add Raspberry-specific dependencies here when needed.
+gpiozero>=2.0
