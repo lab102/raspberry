@@ -30,51 +30,6 @@ def create_handler(app: FirmwareApp) -> type[BaseHTTPRequestHandler]:
             self._send_json(HTTPStatus.NOT_FOUND, {"error": "Not found"})
 
         def do_POST(self) -> None:  # noqa: N802
-            if self.path == "/api/stepper/move":
-                payload = self._read_json_body()
-                if payload is None:
-                    return
-
-                try:
-                    state = app.stepper.move(
-                        direction=str(payload.get("direction", "forward")),
-                        steps=int(payload.get("steps", 0)),
-                    )
-                except (ValueError, RuntimeError) as error:
-                    self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(error)})
-                    return
-
-                self._send_json(HTTPStatus.OK, {"stepper": state})
-                return
-
-            if self.path == "/api/stepper/release":
-                state = app.stepper.release()
-                self._send_json(HTTPStatus.OK, {"stepper": state})
-                return
-
-            if self.path == "/api/sync":
-                payload = self._read_json_body()
-                if payload is None:
-                    return
-
-                try:
-                    sync_state = app.update_sync(
-                        enabled=payload.get("enabled"),
-                        direction=payload.get("direction"),
-                        steps_per_hz=float(payload["steps_per_hz"])
-                        if "steps_per_hz" in payload
-                        else None,
-                        max_steps_per_second=float(payload["max_steps_per_second"])
-                        if "max_steps_per_second" in payload
-                        else None,
-                    )
-                except (ValueError, RuntimeError) as error:
-                    self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(error)})
-                    return
-
-                self._send_json(HTTPStatus.OK, {"sync": sync_state, "stepper": app.stepper.get_state()})
-                return
-
             if self.path == "/api/mock-sensor":
                 payload = self._read_json_body()
                 if payload is None:

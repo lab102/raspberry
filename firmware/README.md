@@ -8,7 +8,6 @@ The current structure separates the application logic from the hardware adapter:
 - `src/config.py`: runtime configuration
 - `src/hardware/gpio.py`: Raspberry GPIO adapter placeholder
 - `src/hardware/mock_gpio.py`: local development adapter
-- `src/stepper.py`: stepper motor control logic and state tracking
 
 ## Run
 
@@ -18,25 +17,17 @@ python src/main.py
 
 The firmware now exposes a small HTTP API on `http://0.0.0.0:8000`:
 
-- `GET /api/status`: firmware and motor status
-- `POST /api/stepper/move`: move the motor with `{"direction":"forward","steps":256}`
-- `POST /api/stepper/release`: release the motor coils
-- `POST /api/sync`: enable or tune sensor-to-stepper sync
+- `GET /api/status`: firmware and sensor status, including firmware-generated timestamps
 - `POST /api/mock-sensor`: change the local mock sensor frequency in Hz
 
 Environment variables:
 
 - `RASPBERRY_USE_MOCK_GPIO=false` to use real Raspberry GPIO with `gpiozero`
 - `RASPBERRY_API_PORT=8000` to change the API port
-- `RASPBERRY_STEPPER_PINS=17,18,27,22` to set the four stepper GPIO pins
-- `RASPBERRY_STEPPER_DELAY_MS=2.5` to tune the stepping speed
-- `RASPBERRY_STEPPER_STEPS_PER_REV=2048` to match your motor/gearing
 - `RASPBERRY_SENSOR_PIN=24` to select the sensor input pin
 - `RASPBERRY_SENSOR_SAMPLE_WINDOW_SECONDS=1.0` to set the measurement window
-- `RASPBERRY_SYNC_STEPS_PER_HZ=32` to convert sensor Hz to stepper steps/second
-- `RASPBERRY_SYNC_DIRECTION=forward` to choose tracking direction
-- `RASPBERRY_SYNC_MAX_STEPS_PER_SECOND=900` to cap the commanded stepper speed
-- `RASPBERRY_MOCK_SENSOR_HZ=2` to set the local simulated pulse frequency
+- `RASPBERRY_MOCK_SENSOR_HZ=5500` to set the mock sensor starting frequency in Hz
+- `RASPBERRY_MOCK_SENSOR_GROWTH_RATE_PER_SECOND=0.001` to increase mock frequency by 0.1% per second
 
 ## Local simulation
 
@@ -52,10 +43,6 @@ python src/main.py
 npm run dev
 ```
 
-3. In the UI:
+3. Open the UI to see connection status and the measured sensor frequency update live.
 
-- set a mock frequency such as `5 Hz`
-- enable sync
-- choose `steps per sensor Hz`, for example `40`
-
-At `5 Hz` and `40 steps/Hz`, the stepper target will become `200 steps/second`.
+By default, mock mode starts near `5500 Hz` and ramps upward by `0.1%` per second. The measured frequency is still calculated in firmware from emitted pulse edges.
