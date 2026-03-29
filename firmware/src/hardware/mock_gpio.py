@@ -8,10 +8,10 @@ class MockInputProfile:
     def __init__(self, base_frequency_hz: float, growth_rate_per_second: float) -> None:
         self.base_frequency_hz = max(base_frequency_hz, 0.0)
         self.growth_rate_per_second = max(growth_rate_per_second, 0.0)
-        self.started_at = time.monotonic()
+        self.started_at_ns = time.perf_counter_ns()
 
-    def frequency_at(self, now: float) -> float:
-        elapsed_seconds = max(now - self.started_at, 0.0)
+    def frequency_at(self, now_ns: int) -> float:
+        elapsed_seconds = max(now_ns - self.started_at_ns, 0) / 1_000_000_000
         return self.base_frequency_hz * ((1 + self.growth_rate_per_second) ** elapsed_seconds)
 
 
@@ -58,22 +58,22 @@ class MockGPIOAdapter:
 
     def _pulse_loop(self) -> None:
         pulse_credit: dict[int, float] = {}
-        last_tick_at = time.monotonic()
+        last_tick_at_ns = time.perf_counter_ns()
 
         while self._running:
-            now = time.monotonic()
-            elapsed = max(now - last_tick_at, 0.0)
-            last_tick_at = now
+            now_ns = time.perf_counter_ns()
+            elapsed_seconds = max(now_ns - last_tick_at_ns, 0) / 1_000_000_000
+            last_tick_at_ns = now_ns
             with self._runner_lock:
                 profiles = list(self._mock_sensor_profiles.items())
 
             for pin, profile in profiles:
-                frequency_hz = profile.frequency_at(now)
+                frequency_hz = profile.frequency_at(now_ns)
                 if frequency_hz <= 0:
                     pulse_credit.pop(pin, None)
                     continue
 
-                pulse_credit[pin] = pulse_credit.get(pin, 0.0) + (frequency_hz * elapsed)
+                pulse_credit[pin] = pulse_credit.get(pin, 0.0) + (frequency_hz * elapsed_seconds)
                 due_pulses = int(pulse_credit[pin])
                 if due_pulses <= 0:
                     continue
@@ -85,4 +85,4 @@ class MockGPIOAdapter:
 
                 pulse_credit[pin] -= due_pulses
 
-            time.sleep(0.0005)
+            time.sleep(0.0001)
